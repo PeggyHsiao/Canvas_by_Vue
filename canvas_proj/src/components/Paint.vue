@@ -10,10 +10,7 @@
           class="nav-item"
           @click="clearCanvas"
         >
-          <FontAwesome
-            :icon="['far', 'trash-alt']"
-          />
-          <span>CLEAR ALL</span>
+          <FontAwesome :icon="['far', 'trash-alt']" /> <span>CLEAR ALL</span>
         </li>
         <li class="nav-item">
           <FontAwesome :icon="['fas', 'undo-alt']" /> <span>UNDO</span>
@@ -113,7 +110,6 @@ export default {
       isMouseDown: false,
       strokeWidth: 10,
       strokeColor: '',
-      mouseDownPosition: null,
       isToolActive: false,
     };
   },
@@ -145,24 +141,21 @@ export default {
     },
     getWindowEvent() {
       window.addEventListener('mousemove', (e) => {
-        // 取得整個螢幕的寬高，offset只會抓取位於所屬元素裡的座標
-        // this.getCanvasMousePosition(e.clientX, e.clientY);
-
+        const pos = this.getCanvasNowPosition(e.clientX, e.clientY);
         if (this.isMouseDown && this.mouseOldPosition) {
-          // const pos = this.getCanvasMousePosition(e.clientX, e.clientY);
           this.canvasContext.beginPath();
           this.canvasContext.moveTo(this.mouseOldPosition.x, this.mouseOldPosition.y);
-          this.canvasContext.lineTo(e.clientX, e.clientY);
+          this.canvasContext.lineTo(pos.x, pos.y);
           this.canvasContext.stroke();
         }
 
-        this.setCanvasPosition(e.clientX, e.clientY);
+        this.setCanvasOldPosition(e.clientX, e.clientY);
       });
     },
     setCanvas() {
       const canvas = this.$refs.sketchpad;
       canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight - 60; // 扣除nav的高度
+      canvas.height = window.innerHeight - 80; // 扣除nav的高度
 
       const ctx = canvas.getContext('2d');
       ctx.lineCap = 'round';
@@ -176,23 +169,23 @@ export default {
       const { canvas } = this.canvasContext;
       this.canvasContext.clearRect(0, 0, canvas.width, canvas.height);
     },
-    // getCanvasMousePosition(clientX, clientY) {
-    //   const canvasPosition = this.canvasContext.canvas.getBoundingClientRect();
-    //   const x = clientX - canvasPosition.x;
-    //   const y = clientY - canvasPosition.y;
+    setCanvasOldPosition(clientX, clientY) {
+      const domRect = this.canvasContext.canvas.getBoundingClientRect();// 得到canvas的DOMRect(位置和大小)
 
-    //   this.mouseOldPosition = { x, y };
-    // },
-    setCanvasPosition(x, y) {
+      const x = clientX - domRect.x;
+      const y = clientY - domRect.y;
+
       this.mouseOldPosition = { x, y };
+    },
+    getCanvasNowPosition(clientX, clientY) {
+      const domRect = this.canvasContext.canvas.getBoundingClientRect();
+      const x = clientX - domRect.x;
+      const y = clientY - domRect.y;
+      return { x, y };
     },
     onCanvasMouseDown() {
       this.isMouseDown = true;
       this.isOpenColorWheel = false;
-
-      window.addEventListener('mousedown', (e) => {
-        this.mouseDownPosition = { x: e.x, y: e.y };
-      });
     },
     onCanvasMouseUp() {
       this.isMouseDown = false;
@@ -210,18 +203,19 @@ export default {
 <style scoped>
 *{ box-sizing: border-box; margin: 0; padding: 0; }
 body{ position: relative; }
-.navbar { width: 100%; height: 60px; background: rgb(240, 240, 240)}
+.navbar { width: 100%; height: 80px; background: rgb(240, 240, 240)}
 .nav-item{
-    margin: 0 20px;
-    font-size: 1.5rem;
+    margin: 0 30px;
+    font-size: 1.75rem;
     font-weight: bold;
     color: rgb(41, 41, 41);
     cursor: pointer;
 }
-.nav-item > span{ font-size: 1rem; }
+.nav-item > span{ font-size: 1.25rem; }
 
 .brush-bar {
     background: rgb(240,240,240);
+    box-shadow: 0 0 10px 0 rgba(0, 0, 0, .2);
     border-radius: 50px;
     width: 670px;
     left: calc( 50% - 670px / 2);
