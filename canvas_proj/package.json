@@ -21,7 +21,8 @@
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "~4.5.0",
-    "@vue/cli-plugin-eslint": "^4.5.11",
+    "@vue/cli-plugin-eslint": "~4.5.0",
+    "@vue/cli-plugin-router": "~4.5.0",
     "@vue/cli-service": "~4.5.0",
     "@vue/eslint-config-airbnb": "^5.0.2",
     "babel-eslint": "^10.1.0",
@@ -37,7 +38,6 @@
     },
     "extends": [
       "plugin:vue/recommended",
-      "eslint:recommended",
       "@vue/airbnb"
     ],
     "parserOptions": {
