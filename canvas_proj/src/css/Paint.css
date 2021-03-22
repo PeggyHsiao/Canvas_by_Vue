@@ -6,7 +6,12 @@
     color: rgb(41, 41, 41);
     cursor: pointer;
 }
+.nav-item:hover { color: rgb(0, 133, 167); }
+#trash:hover { color: rgb(189, 0, 0); }
 .nav-item > span{ font-size: 1.25rem; margin-left: 5px; }
+.nav-item--disabled { cursor: not-allowed; color: rgb(206, 206, 206); }
+.nav-item--disabled:hover{ color: rgb(206, 206, 206); }
+
 
 .brush-bar {
     background: rgb(240,240,240);
@@ -21,7 +26,7 @@
     list-style-type: none;
     display: flex;
     margin-bottom: -0.5rem;
-    padding-inline-start: 30px
+    padding-inline-start: 30px;
 }
 .brush-nav-item { margin: 25px 12px; cursor: pointer;}
 .brush-nav-item-no-active { background: rgb(240,240,240); padding: 3px; width: 30px; height: 30px;}
@@ -40,6 +45,7 @@
     margin: 0 10px;
 }
 .size-input:focus { outline: none; }
+
 .color-circle {
     width: 25px; height: 25px;
     border-radius: 100%;

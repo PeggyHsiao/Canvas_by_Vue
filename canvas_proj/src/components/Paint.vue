@@ -7,16 +7,29 @@
           <FontAwesome :icon="['fas', 'save']" /> <span>SAVE</span>
         </li>
         <li
+          id="trash"
           class="nav-item"
           @click="clearCanvas"
         >
           <FontAwesome :icon="['far', 'trash-alt']" /> <span>CLEAR ALL</span>
         </li>
-        <li class="nav-item">
+        <li
+          class="nav-item"
+          :class="{'nav-item--disabled': disabledUndo}"
+          :disabled="disabledUndo"
+          @click="undo"
+        >
           <FontAwesome :icon="['fas', 'undo-alt']" /> <span>UNDO</span>
         </li>
-        <li class="nav-item">
-          <FontAwesome :icon="['fas', 'redo-alt']" /> <span>REDO</span>
+        <li
+          class="nav-item"
+          :class="{'nav-item--disabled': disabledRedo}"
+          @click="redo"
+        >
+          <FontAwesome
+            :icon="['fas', 'redo-alt']"
+            @click="redo"
+          /> <span>REDO</span>
         </li>
         <li class="nav-item">
           <FontAwesome :icon="['fas', 'cloud-upload-alt']" />
@@ -107,6 +120,8 @@ export default {
   name: 'Paint',
   data() {
     return {
+      disabledUndo: true,
+      disabledRedo: true,
       colorList: ['black', 'darkgrey', 'darkred', 'crimson', 'coral'],
       isOpenColorWheel: false, // 是否開啟顏色選擇器
       pickerWheelStartColor: '#ff0000', // 自選顏色方框顏色
@@ -118,6 +133,8 @@ export default {
       isMouseDown: false,
       mouseOldPosition: null, // 前一個滑鼠位置
       strokeWidth: 10, // 畫筆粗細
+      historyArr: [], // 存畫布操作步驟，提供undo、redo功能
+      drawStep: -1, // 步驟(對應historyArr索引值，所以預設為-1，當有第一筆紀錄為0)
     };
   },
   watch: {
@@ -132,6 +149,19 @@ export default {
         this.currentColor = this.oldColor;
       }
     },
+    historyArr() {
+      if (this.historyArr.length > 10) {
+        this.historyArr.splice(0, this.historyArr.length - 10);
+      }
+    },
+    // drawStep() {
+    //   if (this.drawStep > 9) { this.drawStep = 9; }
+    //   if (!this.drawStep) {
+    //     this.disabledUndo = true;
+    //   } else {
+    //     this.disabledUndo = false;
+    //   }
+    // },
   },
   mounted() {
     [this.currentColor] = this.colorList;
@@ -139,20 +169,6 @@ export default {
     this.getWindowEvent();
   },
   methods: {
-    setCanvas() {
-      const canvas = this.$refs.sketchpad;
-      canvas.width = window.innerWidth;
-      // 扣除nav的高度
-      canvas.height = window.innerHeight - 80;
-
-      const ctx = canvas.getContext('2d');
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.lineWidth = this.strokeWidth;
-      ctx.strokeStyle = this.currentColor;
-
-      this.canvasContext = ctx; // 關於canvas的設定，包含畫板大小、畫筆樣式
-    },
     // 點選顏色選擇器
     clickColorWheel() {
       this.isOpenColorWheel = !this.isOpenColorWheel;
@@ -202,8 +218,23 @@ export default {
           }
         }
         if (this.currentTool === 'square' && this.isMouseDown) { return; }
+
         this.setCanvasOldPosition(e.clientX, e.clientY);
       });
+    },
+    setCanvas() {
+      const canvas = this.$refs.sketchpad;
+      canvas.width = window.innerWidth;
+      // 扣除nav的高度
+      canvas.height = window.innerHeight - 80;
+
+      const ctx = canvas.getContext('2d');
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.lineWidth = this.strokeWidth;
+      ctx.strokeStyle = this.currentColor;
+
+      this.canvasContext = ctx; // 關於canvas的設定，包含畫板大小、畫筆樣式
     },
     clearCanvas() {
       const { canvas } = this.canvasContext;
@@ -237,6 +268,38 @@ export default {
     },
     onCanvasMouseUp() {
       this.isMouseDown = false;
+      this.saveCanvasToHistory();
+    },
+    saveCanvasToHistory() {
+      this.drawStep += 1;
+      // 把目前畫布轉成base64保存在陣列
+      const { canvas } = this.canvasContext;
+      this.historyArr.push(canvas.toDataURL());
+    },
+    undo() {
+      // const { canvas } = this.canvasContext;
+      // if (this.drawStep >= 0) {
+      //   this.canvasContext.clearRect(0, 0, canvas.width, canvas.height);
+      //   const img = new Image();
+
+      //   img.src = this.historyArr[this.drawStep - 1] || this.historyArr[0]; // 取得前一個動作的值
+      //   img.onload = () => {
+      //     this.canvasContext.drawImage(img, 0, 0);
+      //   };
+      //   this.drawStep -= 1;
+      // }
+    },
+    redo() {
+      // const { canvas } = this.canvasContext;
+      // if (this.drawStep < this.historyArr.length) {
+      //   this.canvasContext.clearRect(0, 0, canvas.width, canvas.height);
+      //   const img = new Image();
+      //   img.src = this.historyArr[this.drawStep + 1];// 取得後一個動作的值
+      //   img.onload = () => {
+      //     this.canvasContext.drawImage(img, 0, 0);
+      //   };
+      //   this.drawStep += 1;
+      // }
     },
   },
 };
