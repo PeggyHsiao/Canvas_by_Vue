@@ -114,9 +114,10 @@ export default {
       oldColor: '', // 紀錄舊顏色，從eraser切回bruch可以用
       currentTool: 'brush', // 目前選擇的工具
       canvasContext: null,
+      tempCanvas: null,
       isMouseDown: false,
-      strokeWidth: 10,
-      strokeColor: '',
+      mouseOldPosition: null, // 前一個滑鼠位置
+      strokeWidth: 10, // 畫筆粗細
     };
   },
   watch: {
@@ -138,6 +139,20 @@ export default {
     this.getWindowEvent();
   },
   methods: {
+    setCanvas() {
+      const canvas = this.$refs.sketchpad;
+      canvas.width = window.innerWidth;
+      // 扣除nav的高度
+      canvas.height = window.innerHeight - 80;
+
+      const ctx = canvas.getContext('2d');
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.lineWidth = this.strokeWidth;
+      ctx.strokeStyle = this.currentColor;
+
+      this.canvasContext = ctx; // 關於canvas的設定，包含畫板大小、畫筆樣式
+    },
     // 點選顏色選擇器
     clickColorWheel() {
       this.isOpenColorWheel = !this.isOpenColorWheel;
@@ -160,15 +175,20 @@ export default {
         // 取得當前的位置
         const pos = this.getCanvasNowPosition(e.clientX, e.clientY);
 
+        // 當滑鼠按下且有舊的位置
         if (this.isMouseDown && this.mouseOldPosition) {
           switch (this.currentTool) {
             case 'square':
+              this.canvasContext.putImageData(this.tempCanvas, 0, 0); // 畫圖之前的畫布
+
+              // 隨著滑鼠畫矩形
               this.canvasContext.strokeRect(
                 this.mouseOldPosition.x,
                 this.mouseOldPosition.y,
-                Math.abs(this.mouseOldPosition.x - pos.x),
-                Math.abs(this.mouseOldPosition.y - pos.y),
+                pos.x - this.mouseOldPosition.x,
+                pos.y - this.mouseOldPosition.y,
               );
+              // 用目前滑鼠的位置 - 上次滑鼠的位置來判斷矩形長在滑鼠的左邊or右邊(width,height負值表示長在左邊)
               break;
             default:
               this.canvasContext.beginPath();
@@ -181,22 +201,9 @@ export default {
               break;
           }
         }
+        if (this.currentTool === 'square' && this.isMouseDown) { return; }
         this.setCanvasOldPosition(e.clientX, e.clientY);
       });
-    },
-    setCanvas() {
-      const canvas = this.$refs.sketchpad;
-      canvas.width = window.innerWidth;
-      // 扣除nav的高度
-      canvas.height = window.innerHeight - 80;
-
-      const ctx = canvas.getContext('2d');
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.lineWidth = this.strokeWidth;
-      ctx.strokeStyle = this.currentColor;
-
-      this.canvasContext = ctx; // 關於canvas的設定，包含畫板大小、畫筆樣式
     },
     clearCanvas() {
       const { canvas } = this.canvasContext;
@@ -212,14 +219,21 @@ export default {
       this.mouseOldPosition = { x, y };
     },
     getCanvasNowPosition(clientX, clientY) {
+      // 取得canvas跟視窗的距離(ex: y=80 因為導覽列的高度為80)
       const domRect = this.canvasContext.canvas.getBoundingClientRect();
       const x = clientX - domRect.x;
       const y = clientY - domRect.y;
       return { x, y };
     },
+    setTempCanvas() {
+      const { canvas } = this.canvasContext;
+      // 整個canvas暫存，目前畫布的都複製起來
+      this.tempCanvas = this.canvasContext.getImageData(0, 0, canvas.width, canvas.height);
+    },
     onCanvasMouseDown() {
       this.isMouseDown = true;
       this.isOpenColorWheel = false;
+      this.setTempCanvas();
     },
     onCanvasMouseUp() {
       this.isMouseDown = false;
