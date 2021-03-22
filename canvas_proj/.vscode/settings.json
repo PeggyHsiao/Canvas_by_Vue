@@ -1,0 +1,19 @@
+{ 
+  "eslint.alwaysShowStatus": true,
+  "vetur.validation.template": false,
+  //"vetur.validation.style": false,
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "vue"
+  ],
+  // "emmet.includeLanguages": {
+  //   "vue-html": "html",
+  //   "vue": "html",
+  //   "javascript": "javascriptreact"
+  // },
+  "files.eol": "auto",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  }
+}
