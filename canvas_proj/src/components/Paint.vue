@@ -54,6 +54,13 @@
             <span>UPLOAD IMAGE</span>
           </label>
         </li>
+        <li
+          class="nav-item"
+          @click="test"
+        >
+          <FontAwesome :icon="['fas', 'adjust']" />
+          <span>COLOR REVERSE</span>
+        </li>
       </ul>
     </nav>
 
@@ -342,7 +349,6 @@ export default {
 
       const reader = new FileReader();
       reader.readAsDataURL(file); // 將檔案轉成data url
-
       reader.onload = () => {
         this.showUploadImg(reader.result);
       };
@@ -350,10 +356,21 @@ export default {
     showUploadImg(src) {
       const img = new Image();
       img.src = src;
-
       img.onload = () => {
         this.canvasContext.drawImage(img, 50, 50); // 預設圖片放在x:50, y:50
       };
+    },
+    test() {
+      const { canvas } = this.canvasContext;
+      const imgData = this.canvasContext.getImageData(0, 0, canvas.width, canvas.height);
+
+      for (let i = 0; i < imgData.data.length; i += 4) {
+        imgData.data[i] = 255 - imgData.data[i]; // R
+        imgData.data[i + 1] = 255 - imgData.data[i + 1]; // G
+        imgData.data[i + 2] = 255 - imgData.data[i + 2]; // B
+      }
+
+      this.canvasContext.putImageData(imgData, 0, 0);
     },
   },
 };
