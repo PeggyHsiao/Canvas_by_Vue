@@ -120,8 +120,6 @@ export default {
   name: 'Paint',
   data() {
     return {
-      disabledUndo: true,
-      disabledRedo: true,
       colorList: ['black', 'darkgrey', 'darkred', 'crimson', 'coral'],
       isOpenColorWheel: false, // 是否開啟顏色選擇器
       pickerWheelStartColor: '#ff0000', // 自選顏色方框顏色
@@ -134,8 +132,18 @@ export default {
       mouseOldPosition: null, // 前一個滑鼠位置
       strokeWidth: 10, // 畫筆粗細
       historyArr: [], // 存畫布操作步驟，提供undo、redo功能
-      drawStep: -1, // 步驟(對應historyArr索引值，所以預設為-1，當有第一筆紀錄為0)
+      drawStep: 0, // 步驟(對應historyArr索引值，所以預設為-1，當有第一筆紀錄為0)
     };
+  },
+  computed: {
+    disabledUndo() {
+      if (this.drawStep) { return false; }
+      return true;
+    },
+    disabledRedo() {
+      if (this.historyArr.length === 0 || this.drawStep === this.historyArr.length) { return true; }
+      return false;
+    },
   },
   watch: {
     currentColor() {
@@ -149,19 +157,6 @@ export default {
         this.currentColor = this.oldColor;
       }
     },
-    historyArr() {
-      if (this.historyArr.length > 10) {
-        this.historyArr.splice(0, this.historyArr.length - 10);
-      }
-    },
-    // drawStep() {
-    //   if (this.drawStep > 9) { this.drawStep = 9; }
-    //   if (!this.drawStep) {
-    //     this.disabledUndo = true;
-    //   } else {
-    //     this.disabledUndo = false;
-    //   }
-    // },
   },
   mounted() {
     [this.currentColor] = this.colorList;
@@ -228,6 +223,8 @@ export default {
       // 扣除nav的高度
       canvas.height = window.innerHeight - 80;
 
+      this.emptyCanvasBase = canvas.toDataURL(); // 沒有畫筆的畫板base64代碼
+
       const ctx = canvas.getContext('2d');
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
@@ -239,6 +236,8 @@ export default {
     clearCanvas() {
       const { canvas } = this.canvasContext;
       this.canvasContext.clearRect(0, 0, canvas.width, canvas.height);
+      this.historyArr = [];
+      this.drawStep = 0;
     },
     setCanvasOldPosition(clientX, clientY) {
       // 得到canvas的DOMRect(位置和大小)
@@ -271,35 +270,47 @@ export default {
       this.saveCanvasToHistory();
     },
     saveCanvasToHistory() {
-      this.drawStep += 1;
       // 把目前畫布轉成base64保存在陣列
       const { canvas } = this.canvasContext;
-      this.historyArr.push(canvas.toDataURL());
+      const base64 = canvas.toDataURL();
+
+      if (base64 === this.emptyCanvasBase) return;
+      this.historyArr.push(base64);
+
+      if (this.drawStep !== this.historyArr.length) {
+        // 取得最新陣列跟目前位置中間要刪除的數量，去頭去尾要-1
+        this.historyArr.splice(this.drawStep, this.historyArr.length - this.drawStep - 1);
+      }
+
+      this.drawStep = this.historyArr.length;
+
+      // 復原後新增畫筆，會從當前的陣列往後加，之前因復原消失的紀錄清除。
     },
     undo() {
-      // const { canvas } = this.canvasContext;
-      // if (this.drawStep >= 0) {
-      //   this.canvasContext.clearRect(0, 0, canvas.width, canvas.height);
-      //   const img = new Image();
+      const { canvas } = this.canvasContext;
+      if (this.drawStep > 0) {
+        this.drawStep -= 1;
 
-      //   img.src = this.historyArr[this.drawStep - 1] || this.historyArr[0]; // 取得前一個動作的值
-      //   img.onload = () => {
-      //     this.canvasContext.drawImage(img, 0, 0);
-      //   };
-      //   this.drawStep -= 1;
-      // }
+        this.canvasContext.clearRect(0, 0, canvas.width, canvas.height);
+        const img = new Image();
+        img.src = this.historyArr[this.drawStep - 1] || this.emptyCanvasBase; // 取得前一個動作的值或全空的base64
+        img.onload = () => {
+          this.canvasContext.drawImage(img, 0, 0);
+        };
+      }
     },
     redo() {
-      // const { canvas } = this.canvasContext;
-      // if (this.drawStep < this.historyArr.length) {
-      //   this.canvasContext.clearRect(0, 0, canvas.width, canvas.height);
-      //   const img = new Image();
-      //   img.src = this.historyArr[this.drawStep + 1];// 取得後一個動作的值
-      //   img.onload = () => {
-      //     this.canvasContext.drawImage(img, 0, 0);
-      //   };
-      //   this.drawStep += 1;
-      // }
+      const { canvas } = this.canvasContext;
+      if (this.drawStep < this.historyArr.length) {
+        this.drawStep += 1;
+
+        this.canvasContext.clearRect(0, 0, canvas.width, canvas.height);
+        const img = new Image();
+        img.src = this.historyArr[this.drawStep - 1];// 取得後一個動作的值
+        img.onload = () => {
+          this.canvasContext.drawImage(img, 0, 0);
+        };
+      }
     },
   },
 };
