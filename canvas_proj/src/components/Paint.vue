@@ -3,9 +3,21 @@
     <!-- Tool Bar -->
     <nav class="navbar navbar-expand">
       <ul class="navbar-nav">
-        <li class="nav-item">
-          <FontAwesome :icon="['fas', 'save']" /> <span>SAVE</span>
-        </li>
+        <a
+          :href="currentCanvasBase64"
+          download="Canvas.png"
+        >
+          <li
+            class="nav-item"
+            @click="saveCanvasToImage"
+          >
+            <FontAwesome :icon="['fas', 'save']" /> <span>SAVE</span>
+          </li>
+          <img
+            :src="currentCanvasBase64"
+            hidden
+          >
+        </a>
         <li
           id="trash"
           class="nav-item"
@@ -133,6 +145,7 @@ export default {
       strokeWidth: 10, // 畫筆粗細
       historyArr: [], // 存畫布操作步驟，提供undo、redo功能
       drawStep: 0, // 步驟(對應historyArr索引值，所以預設為-1，當有第一筆紀錄為0)
+      currentCanvasBase64: '', // 當前畫板的base64，提供儲存使用
     };
   },
   computed: {
@@ -311,6 +324,10 @@ export default {
           this.canvasContext.drawImage(img, 0, 0);
         };
       }
+    },
+    saveCanvasToImage() {
+      const { canvas } = this.canvasContext;
+      this.currentCanvasBase64 = canvas.toDataURL();
     },
   },
 };
