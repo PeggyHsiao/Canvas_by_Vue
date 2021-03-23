@@ -1,4 +1,5 @@
 a:hover { text-decoration: none; }
+
 .navbar { width: 100%; height: 80px; background: rgb(240, 240, 240); }
 .nav-item{
     margin: 0 30px;
@@ -6,10 +7,12 @@ a:hover { text-decoration: none; }
     font-weight: bold;
     color: rgb(41, 41, 41);
     cursor: pointer;
+    transition: .2s linear;
 }
-.nav-item:hover { color: rgb(0, 133, 167); }
+.nav-item:hover { color: rgb(0, 133, 167); margin-top: -5px;}
 #trash:hover { color: rgb(189, 0, 0); }
-.nav-item > span{ font-size: 1.25rem; margin-left: 5px; }
+#upload-label { margin-bottom: 0; }
+.nav-item span{ font-size: 1.25rem; margin-left: 5px; }
 .nav-item--disabled { cursor: not-allowed; color: rgb(206, 206, 206); }
 .nav-item--disabled:hover{ color: rgb(206, 206, 206); }
 

@@ -44,8 +44,15 @@
           /> <span>REDO</span>
         </li>
         <li class="nav-item">
-          <FontAwesome :icon="['fas', 'cloud-upload-alt']" />
-          <span>UPLOAD IMAGE</span>
+          <label id="upload-label">
+            <input
+              type="file"
+              hidden
+              @change="getUploadFile($event)"
+            >
+            <FontAwesome :icon="['fas', 'cloud-upload-alt']" />
+            <span>UPLOAD IMAGE</span>
+          </label>
         </li>
       </ul>
     </nav>
@@ -236,7 +243,7 @@ export default {
       // 扣除nav的高度
       canvas.height = window.innerHeight - 80;
 
-      this.emptyCanvasBase = canvas.toDataURL(); // 沒有畫筆的畫板base64代碼
+      this.emptyCanvasBase = canvas.toDataURL(); // 沒有畫筆的畫板的data url
 
       const ctx = canvas.getContext('2d');
       ctx.lineCap = 'round';
@@ -328,6 +335,25 @@ export default {
     saveCanvasToImage() {
       const { canvas } = this.canvasContext;
       this.currentCanvasBase64 = canvas.toDataURL();
+    },
+    getUploadFile(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.readAsDataURL(file); // 將檔案轉成data url
+
+      reader.onload = () => {
+        this.showUploadImg(reader.result);
+      };
+    },
+    showUploadImg(src) {
+      const img = new Image();
+      img.src = src;
+
+      img.onload = () => {
+        this.canvasContext.drawImage(img, 50, 50); // 預設圖片放在x:50, y:50
+      };
     },
   },
 };
