@@ -59,7 +59,7 @@
           @click="test"
         >
           <FontAwesome :icon="['fas', 'adjust']" />
-          <span>COLOR REVERSE</span>
+          <span>INVERT</span>
         </li>
       </ul>
     </nav>
